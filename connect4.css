@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  background-color: #333333;
+}
+
+canvas {
+  overflow-y: hidden;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  
+}
