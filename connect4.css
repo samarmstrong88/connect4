@@ -10,6 +10,21 @@ canvas {
   margin: 0 auto;
 }
 
+#gamePieceCanvas {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: 1;
+}
+
+#frameCanvas {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: 3;
+}
+
+
 header {
   display: flex;
   flex-direction: row;
