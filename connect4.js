@@ -11,31 +11,39 @@ const connect4 = (() => {
   const PADDING = 10; //padding is 10px inside canvas
   const WINNING_NUMBER = 4
   const AI_DEPTH = 4;
-  let current_player = PLAYER1;
-  let validMoves = true;
-  let winner = {
+  const current_player = PLAYER1;
+  const validMoves = true;
+  const gameState = {
     winningPlayer: null,
     winningPos: [],
+    animatingDrop: false,
   } 
-  let winningPos = []; ///array of the position of the winning line
-  let animating = false;
+
 
   /*Create an gameArray of columns - each individual array in the game array is one column
   This allows each sub-array to 'fill' during gameplay, rather than filling into different arrays,
   which would occur if the game array was an array of rows. */
-  let gameArray = new Array(COLS)
+  const gameArray = new Array(COLS)
   for (let i = 0; i < COLS; i++) {
     gameArray[i] = new Array(ROWS).fill(0);
   }
 
+  const canvasWrapper = document.getElementById('canvas-wrapper');
   const gamePieceCanvas = document.createElement('canvas');
   const frameCanvas = document.createElement('canvas');
-  gamePieceCanvas.id = 'gamePieceCanvas';
-  frameCanvas.id = 'frameCanvas';
-  document.body.appendChild(gamePieceCanvas);
-  document.body.appendChild(frameCanvas);  
-  let ctxGame = gamePieceCanvas.getContext('2d');
-  let ctxFrame = frameCanvas.getContext('2d');
+  const backgroundCanvas = document.createElement('canvas');
+  gamePieceCanvas.id = 'game-piece-canvas';
+  frameCanvas.id = 'frame-canvas';
+  backgroundCanvas.id = 'background-canvas'
+
+  canvasWrapper.appendChild(gamePieceCanvas);
+  canvasWrapper.appendChild(frameCanvas);  
+  canvasWrapper.appendChild(backgroundCanvas);
+
+  const ctxGame = gamePieceCanvas.getContext('2d');
+  const ctxFrame = frameCanvas.getContext('2d');
+  const ctxBackground = backgroundCanvas.getContext('2d');
+
  
   
 
@@ -43,6 +51,7 @@ const connect4 = (() => {
 
   function draw() {
     drawFrame();
+    drawBackground();
     drawGamePieces(gameArray);
   }
 
@@ -53,15 +62,24 @@ const connect4 = (() => {
     let topY = canvasRect.top;  
     let x = window.innerWidth;
     let y = window.innerHeight - topY;
-    
-    if ((x-2*PADDING)/7 > (y-2*PADDING) / 6) {
-      gamePieceCanvas.height = frameCanvas.height = y;
-      gamePieceCanvas.width = frameCanvas.width = (y-2*PADDING)*(7/6) +2*PADDING
+
+    if (x>y) {
+      backgroundCanvas.width = gamePieceCanvas.width = frameCanvas.width = y
+      backgroundCanvas.height = gamePieceCanvas.height = frameCanvas.height = y
     }
     else {
-      gamePieceCanvas.width = frameCanvas.width =  x;
-      gamePieceCanvas.height = frameCanvas.height = (x-2*PADDING)*(6/7) + 2*PADDING;
+      backgroundCanvas.width = gamePieceCanvas.width = frameCanvas.width = x
+      backgroundCanvas.height = gamePieceCanvas.height = frameCanvas.height = x
     }
+    
+    // if ((x-2*PADDING)/7 > (y-2*PADDING) / 6) {
+    //   gamePieceCanvas.height = frameCanvas.height = y;
+    //   gamePieceCanvas.width = frameCanvas.width = (y-2*PADDING)*(7/6) +2*PADDING
+    // }
+    // else {
+    //   gamePieceCanvas.width = frameCanvas.width =  x;
+    //   gamePieceCanvas.height = frameCanvas.height = (x-2*PADDING)*(6/7) + 2*PADDING;
+    // }
   draw();
   }
 
@@ -71,7 +89,7 @@ const connect4 = (() => {
     
     ctxFrame.beginPath();
     ctxFrame.fillStyle = 'blue';  
-    ctxFrame.fillRect(0,0, frameCanvas.width, frameCanvas.height); 
+    ctxFrame.fillRect(0, cell_width, frameCanvas.width, frameCanvas.height); 
     ctxFrame.save()
    
     
@@ -79,7 +97,7 @@ const connect4 = (() => {
      for (let i=0; i< gameArray.length; i++) {
       for (let j=0; j < gameArray[i].length; j++) { 
         let x = cell_width / 2 + i * cell_width;
-        let y = cell_width /2 + j * cell_width;
+        let y = cell_width /2 + (j+1) * cell_width;
         
         ctxFrame.globalCompositeOperation="xor";
         ctxFrame.beginPath();
@@ -90,10 +108,10 @@ const connect4 = (() => {
     }
     ctxFrame.restore();
 
-    if (winner.winningPos.length > 1) {
+    if (gameState.winningPos.length > 1) {
       ctxFrame.beginPath();
       ctxFrame.lineWidth =  10;
-      let winLine = winner.winningPos;
+      let winLine = gameState.winningPos;
       let color = 'black';
       let xStart = cell_width / 2 + winLine[0] * cell_width;
       let yStart = cell_width / 2 + winLine[1] * cell_width;
@@ -106,6 +124,11 @@ const connect4 = (() => {
     }
     
 
+  }
+  function drawBackground() {
+    ctxBackground.beginPath();
+    ctxBackground.fillStyle = 'lightgray';
+    ctxBackground.fillRect(0,0, backgroundCanvas.width, backgroundCanvas.height);
   }
 
   function drawGamePieces(gameArray) {
@@ -120,7 +143,7 @@ const connect4 = (() => {
         let player = gameArray[i][j];
         let color = fillStyles[player]
         let x = cell_width / 2 + i * cell_width;
-        let y = cell_width /2 + j * cell_width;
+        let y = cell_width /2 + (j+1) * cell_width;
         ctxGame.fillStyle = color;
         ctxGame.moveTo(x,y);
         ctxGame.arc(x, y, hole_radius, 0, 2 * Math.PI);
@@ -129,16 +152,19 @@ const connect4 = (() => {
     }    
   }
 
+
+
   function animateDrop(prevGameArray, player, col, row) {
     const fillStyles = {0: 'lightgrey', 1: 'red', 2: 'yellow'};
     let cell_width = gamePieceCanvas.width / COLS;
     let hole_radius = cell_width * CELL_RADIUS;
-    let currentY = 100;
-    let finishY = cell_width /2 + row * cell_width;
+    let currentY = cell_width /2;
+    let finishY = cell_width /2 + (row +1) * cell_width;
     let posX = cell_width / 2 + col * cell_width
     
     return new Promise(function(resolve,reject) {
       function animate() {
+        gameState.animatingDrop = true;
         ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height);
         drawGamePieces(prevGameArray);
         ctxGame.beginPath()
@@ -159,6 +185,7 @@ const connect4 = (() => {
         }
         else if (currentY === finishY) {
           setTimeout(resolve, 0);
+          gameState.animatingDrop = false;
           //setTimeout moves the resolve to the end ofthe event loop, allowing theanimation to render
           //before starting the AI move
         }
@@ -166,15 +193,38 @@ const connect4 = (() => {
       } 
           
       window.requestAnimationFrame(animate);
-  })
-}
+   })
+  }
+
+  function animateHoverPiece(e, player = PLAYER1) {
+    let col = getColumn(e);
+    if (typeof prevCol == 'undefined') {
+      let prevCol = -1;
+    }
+    const fillStyles = {0: 'lightgrey', 1: 'red', 2: 'yellow'};
+    let cell_width = gamePieceCanvas.width / COLS;
+    let hole_radius = cell_width * CELL_RADIUS;
+    let posX = cell_width / 2 + col * cell_width
+    let posY = cell_width /2;
+
+    if (!gameState.animating) {
+      drawGamePieces(gameArray);
+      ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height);
+      drawGamePieces(gameArray);
+      ctxGame.beginPath()
+      ctxGame.fillStyle = fillStyles[player];
+      ctxGame.moveTo(posX, posY);
+      ctxGame.arc(posX, posY, hole_radius, 0, 2 * Math.PI);
+      ctxGame.closePath();
+      ctxGame.fill();
+    }
+  }
   
   function handleGameClick(e) {
-    if (validMoves && !winner.winningPlayer) {
+    if (validMoves && !gameState.winningPlayer && !gameState.animatingDrop) {
       let col = getColumn(e);
       if (gameArray[col].lastIndexOf(0)>= 0) { //if free spot
-        let movePromise = makeMove(gameArray, col, PLAYER1, true);
-        movePromise
+        makeMove(gameArray, col, PLAYER1, true)
         .then(() => checkWin(gameArray, PLAYER1, col, WINNING_NUMBER))
         .then(() => AImove(gameArray, WINNING_NUMBER))
         
@@ -197,7 +247,7 @@ const connect4 = (() => {
         .then(resolve);
         
       }
-      else {  
+      else { 
         updateBoard() 
         resolve()
       }
@@ -208,7 +258,7 @@ const connect4 = (() => {
   function resetGrid() {
     //Impure fn- effects array, which is not passed
     //reset the game array to be empty (all 0s)
-    winner = {winningPlayer: null, winningPos: []}
+    gameState = {winningPlayer: null, winningPos: []}
     validMoves = true;
     gameArray = new Array(COLS)
     for (let i = 0; i < COLS; i++) {
@@ -267,32 +317,32 @@ const connect4 = (() => {
     //Checks
     if (verticalStr.indexOf(winningStr) >= 0) {
       console.log('win vertical for player', player)
-      winner.winningPos = [moveX, moveY, moveX, moveY + 3];
-      winner.winningPlayer = player;
+      gameState.winningPos = [moveX, moveY, moveX, moveY + 3];
+      gameState.winningPlayer = player;
     }
     if (horizontalStr.indexOf(winningStr) >= 0) {
       console.log('Win horizontal for player', player);
       let stringPos = horizontalStr.indexOf(winningStr);
-      winner.winningPos = [stringPos, moveY, stringPos+3, moveY]
-      winner.winningPlayer = player;
+      gameState.winningPos = [stringPos, moveY, stringPos+3, moveY]
+      gameState.winningPlayer = player;
       return true;
     }
     if (posDiagStr.indexOf(winningStr) >= 0) {
       console.log('Win +ve diagonal for player', player);
       let stringPos = posDiagStr.indexOf(winningStr);
-      winner.winningPos = [
+      gameState.winningPos = [
         posDiagStart[0]+stringPos, posDiagStart[1] + stringPos,  posDiagStart[0]+stringPos+3, posDiagStart[1] + stringPos+3
       ]
-      winner.winningPlayer = player;
+      gameState.winningPlayer = player;
       return true;
     }
     if (negDiagStr.indexOf(winningStr) >= 0) {
       console.log('Win -ve diagonal for player', player);
       let stringPos = negDiagStr.indexOf(winningStr);
-      winner.winningPos = [
+      gameState.winningPos = [
         negDiagStart[0]+stringPos, negDiagStart[1] - stringPos,  negDiagStart[0]+stringPos+3, negDiagStart[1] + stringPos - 3
       ]
-      winner.winningPlayer = player;
+      gameState.winningPlayer = player;
       return true;
     }
   }
@@ -322,7 +372,7 @@ const connect4 = (() => {
       // console.log('1move')
       makeMove(gameArray, moves[0], PLAYER2, true)
       // draw();
-      return checkWin(gameArray, PLAYER2, move, winningScore)
+      return checkWin(gameArray, PLAYER2, move[0], winningScore)
     }
     else if (moves.length > 1) {
       // console.log('1+moves', moves)
@@ -488,13 +538,14 @@ const connect4 = (() => {
     resetGrid,
     getScore,
     gameArray,
-    winner,
-    winningPos,
+    gameState,
     animateDrop,
+    animateHoverPiece,
   }
 })();
 
 window.addEventListener('resize', connect4.resize);
 window.addEventListener('load', connect4.resize);
-document.getElementById('frameCanvas').addEventListener('click', connect4.handleGameClick);
+document.getElementById('frame-canvas').addEventListener('mousemove', connect4.animateHoverPiece)
+document.getElementById('frame-canvas').addEventListener('click', connect4.handleGameClick);
 document.getElementById('reset').addEventListener('click', connect4.resetGrid)

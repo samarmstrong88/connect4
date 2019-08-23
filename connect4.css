@@ -2,26 +2,31 @@ body {
   margin: 0;
   display: grid;
   grid-template-columns: 1fr;
-  background-color: #333333;
+  background-color: #474747;
 }
 
 canvas {
   overflow-y: hidden;
   margin: 0 auto;
-}
-
-#gamePieceCanvas {
   position: absolute;
   left: 0px;
   top: 0px;
-  z-index: 1;
 }
 
-#frameCanvas {
-  position: absolute;
-  left: 0px;
-  top: 0px;
+#game-piece-canvas {
+  z-index: 2;
+}
+
+#frame-canvas {
   z-index: 3;
+}
+
+#background-canvas {
+  z-index: 1
+}
+
+#canvas-wrapper {
+  position: relative;
 }
 
 
