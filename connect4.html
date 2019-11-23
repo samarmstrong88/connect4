@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Page Title</title>
+  <title>Connect 4 Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" media="screen" href="connect4.css">
 
@@ -13,10 +13,48 @@
 <body>
   <header>
     <h1>Connect 4</h1>
-    <button id='reset'>Reset</button>
+
   </header>
-  <main id='canvas-wrapper'>
-  </main>
+  <div id='game-wrapper'>
+    <fieldset>
+      <form>
+        <div id='game-type-select' class='select-set'>
+          <label>
+            <input type='radio' id='AI-game' name='game-type' value=1 checked>
+            Single Player (vs AI)
+          </label>
+
+          <label>
+            <input type='radio' id='2-player-game' name='game-type' value=2>
+            Two Player
+          </label>
+        </div>
+
+        <div id='difficulty-select' class='select-set'>
+          <label>
+            <input type='radio' id='difficuly-easy' name='difficulty-select' value=1 checked>
+            Easy
+          </label>
+
+          <label>
+            <input type='radio' id='difficulty-med' name='difficulty-select' value=4>
+            Medium
+          </label>
+
+          <label>
+            <input type='radio' id='difficulty-hard' name='difficulty-select' value=6>
+            Hard
+          </label>
+        </div>
+
+        <button id='reset'>Reset</button>
+      </form>
+
+
+    </fieldset>
+    <div id='canvas-wrapper'></div>
+  </div>
+
 </body>
 <script src="connect4.js"></script>
 
