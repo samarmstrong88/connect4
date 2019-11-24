@@ -7,7 +7,7 @@ body {
 }
 
 canvas {
-  overflow-y: hidden;
+  /* overflow-y: hidden; */
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -33,7 +33,7 @@ h1, h2, h3 {
 }
 
 header {
-  background: #406989;
+  background: #5d8bb0;
   
 }
 

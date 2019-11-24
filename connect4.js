@@ -20,6 +20,14 @@ const connect4 = (() => {
     AIDepth: 1,
   } 
 
+  let yellowPiece;
+  // const redPiece = new Image();
+  // redPiece.url = './redpiece.svg';
+  // const yellowPiece = new Image();
+  // yellowPiece.url = './yellowpiece.svg';
+  (async function fetchImg() {
+    yellowPiece = fetch('C:/Projects/Connect4/yellowpiece.svg')
+  })();
 
   /*Create an gameArray of columns - each individual array in the game array is one column
   This allows each sub-array to 'fill' during gameplay, rather than filling into different arrays,
@@ -34,6 +42,8 @@ const connect4 = (() => {
   const frameCanvas = document.createElement('canvas');
   const backgroundCanvas = document.createElement('canvas');
 
+
+
   gamePieceCanvas.id = 'game-piece-canvas';
   frameCanvas.id = 'frame-canvas';
   backgroundCanvas.id = 'background-canvas'
@@ -45,6 +55,7 @@ const connect4 = (() => {
   const ctxGame = gamePieceCanvas.getContext('2d');
   const ctxFrame = frameCanvas.getContext('2d');
   const ctxBackground = backgroundCanvas.getContext('2d');
+  resize();
 
   function draw() {
     drawFrame();
@@ -58,8 +69,7 @@ const connect4 = (() => {
     let canvasRect = gamePieceCanvas.getBoundingClientRect();
     let canvasWrapperRect = canvasWrapper.getBoundingClientRect();
     let canvasWrapperMargin = parseInt(window.getComputedStyle(canvasWrapper).getPropertyValue('margin-bottom'));
-    console.log(window.getComputedStyle(canvasWrapper).getPropertyValue('margin-bottom'))
-    
+        
     let topY = canvasWrapperRect.top;  
     let x = window.innerWidth;
     let y = window.innerHeight - topY - canvasWrapperMargin;
@@ -77,14 +87,6 @@ const connect4 = (() => {
       canvasWrapper.style.height = x + 'px'
     }
     
-    // if ((x-2*PADDING)/7 > (y-2*PADDING) / 6) {
-    //   gamePieceCanvas.height = frameCanvas.height = y;
-    //   gamePieceCanvas.width = frameCanvas.width = (y-2*PADDING)*(7/6) +2*PADDING
-    // }
-    // else {
-    //   gamePieceCanvas.width = frameCanvas.width =  x;
-    //   gamePieceCanvas.height = frameCanvas.height = (x-2*PADDING)*(6/7) + 2*PADDING;
-    // }
   draw();
   }
 
@@ -121,6 +123,7 @@ const connect4 = (() => {
         ctxFrame.fill();
       }
     }
+    ctxFrame.drawImage(yellowPiece, 100,100,100,100);
     ctxFrame.restore();
 
     if (gameState.winningPos.length > 1) {
