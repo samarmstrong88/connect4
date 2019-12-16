@@ -88,7 +88,7 @@ const connect4 = (() => {
     }
 
     let gameWrapStyle = window.getComputedStyle(document.getElementById('game-wrapper'));
-
+    canvasWrapperRect = canvasWrapper.getBoundingClientRect();
     let formStyle = window.getComputedStyle(document.querySelector('form'));
     let formWidth = parseInt(formStyle.getPropertyValue('width'));
     let gameWrapperWidth = parseInt(gameWrapStyle.getPropertyValue('width'));
