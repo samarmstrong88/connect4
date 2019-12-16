@@ -288,8 +288,11 @@ const connect4 = (() => {
     Object.assign(gameState, {winningPlayer: null, winningPos: [], validMoves: true});
     draw();
     
-    gameState.multiPlayer = document.querySelector('input[name="game-type"]:checked').value == 2;
-    gameState.AIDepth = parseInt(document.querySelector('input[name="difficulty-select"]:checked').value);
+    const playerSelect = document.querySelector('select[name="game-type-select"]');
+    const diffSelect = document.querySelector('select[name="difficulty-select"]');
+
+    gameState.multiPlayer =playerSelect.options[playerSelect.selectedIndex].value == 2;
+    gameState.AIDepth = diffSelect.options[diffSelect.selectedIndex].value;
     
     gameArray = new Array(COLS)
     for (let i = 0; i < COLS; i++) {
