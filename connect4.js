@@ -18,16 +18,16 @@ const connect4 = (() => {
     animatingDrop: false,
     multiPlayer: false, //false to play AI, true to play 2-player
     AIDepth: 1,
+    AIMoving: false,
   } 
 
-  let yellowPiece;
-  // const redPiece = new Image();
-  // redPiece.url = './redpiece.svg';
-  // const yellowPiece = new Image();
-  // yellowPiece.url = './yellowpiece.svg';
-  (async function fetchImg() {
-    yellowPiece = fetch('C:/Projects/Connect4/yellowpiece.svg')
-  })();
+
+  const redPiece = new Image();
+  redPiece.src = './assets/redpiece.svg';
+  
+  const yellowPiece = new Image();
+  yellowPiece.src = './assets/yellowpiece.svg';
+
 
   /*Create an gameArray of columns - each individual array in the game array is one column
   This allows each sub-array to 'fill' during gameplay, rather than filling into different arrays,
@@ -86,11 +86,17 @@ const connect4 = (() => {
       canvasWrapper.style.width = x +'px'
       canvasWrapper.style.height = x + 'px'
     }
+
+    let gameWrapStyle = window.getComputedStyle(document.getElementById('game-wrapper'));
+    let gameWrapperWidth = parseInt(gameWrapStyle.getPropertyValue('width'));
+    const headerTitle = document.getElementById('header-title');
+    headerTitle.style.maxWidth = gameWrapperWidth + 'px';
     
   draw();
   }
 
   function drawFrame() {
+ 
     let cell_width = gamePieceCanvas.width / COLS;
     let hole_radius = cell_width * CELL_RADIUS;
 
@@ -123,7 +129,7 @@ const connect4 = (() => {
         ctxFrame.fill();
       }
     }
-    ctxFrame.drawImage(yellowPiece, 100,100,100,100);
+    
     ctxFrame.restore();
 
     if (gameState.winningPos.length > 1) {
@@ -146,51 +152,44 @@ const connect4 = (() => {
   }
   function drawBackground() {
     ctxBackground.beginPath();
-    ctxBackground.fillStyle = 'lightgray';
+    ctxBackground.fillStyle = '#c1d4da';
     ctxBackground.fillRect(0,0, backgroundCanvas.width, backgroundCanvas.height);
   }
 
   function drawGamePieces(gameArray, offsetY = 0) {
 
-    const fillStyles = {0: 'lightgrey', 1: 'red', 2: 'yellow'};
+    ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height); //clears animation so no double ups
+    const pieces = {1: redPiece, 2: yellowPiece};
     let cell_width = gamePieceCanvas.width / COLS;
-    let hole_radius = cell_width * CELL_RADIUS;
-    ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height);
+    let pieceSize = cell_width * CELL_RADIUS *2;
+    ctxBackground.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height);
 
     for (let i=0; i< gameArray.length; i++) {
       for (let j=0; j < gameArray[i].length; j++) { 
-        ctxGame.beginPath();
         let player = gameArray[i][j];
-        let color = fillStyles[player]
-        let x = cell_width / 2 + i * cell_width;
-        let y = (cell_width )/2 + (j+1+ offsetY) * cell_width;
-        ctxGame.fillStyle = color;
-        ctxGame.moveTo(x,y);
-        ctxGame.arc(x, y, hole_radius, 0, 2 * Math.PI);
-        ctxGame.fill();
+        if (player > 0) {
+          let posX = (cell_width - pieceSize)/2 + i * cell_width;
+          let posY = (cell_width - pieceSize)/2 + (j+1+offsetY) * cell_width;
+          ctxBackground.drawImage(pieces[player], posX, posY, pieceSize , pieceSize)
+        }
       }
     }    
   }
 
   function animateDrop(prevGameArray, player, col, row) {
-    const fillStyles = {0: 'lightgrey', 1: 'red', 2: 'yellow'};
+    const gamePieces = { 1: redPiece, 2: yellowPiece};
     let cell_width = gamePieceCanvas.width / COLS;
-    let hole_radius = cell_width * CELL_RADIUS;
-    let currentY = cell_width /2;
-    let finishY = cell_width /2 + (row +1) * cell_width;
-    let posX = cell_width / 2 + col * cell_width
-    
+    let pieceSize = cell_width * CELL_RADIUS *2;
+    let currentY = (cell_width - pieceSize)/2;
+    let finishY = (cell_width - pieceSize)/2 + (row +1) * cell_width;
+    let posX = (cell_width - pieceSize)/2 + col * cell_width;
+
     return new Promise(function(resolve,reject) {
       function animate() {
         gameState.animatingDrop = true;
-        ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height);
-        drawGamePieces(prevGameArray);
-        ctxGame.beginPath()
-        ctxGame.fillStyle = fillStyles[player];
-        ctxGame.moveTo(posX, currentY);
-        ctxGame.arc(posX, currentY, hole_radius, 0, 2 * Math.PI);
-        ctxGame.closePath();
-        ctxGame.fill();
+        ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height)
+        ctxGame.drawImage(gamePieces[player], posX, currentY, pieceSize, pieceSize)
+        
         if (currentY < finishY) {
           if (finishY - currentY < 30) {
             currentY = finishY;
@@ -204,6 +203,7 @@ const connect4 = (() => {
         else if (currentY === finishY) {
           setTimeout(resolve, 0);
           gameState.animatingDrop = false;
+          
           //setTimeout moves the resolve to the end of the event loop, allowing the stack to clear/ animation to render
           //before starting the AI move
         }
@@ -214,82 +214,42 @@ const connect4 = (() => {
    })
   }
 
-  async function animateReset(gameArray) {
-    let topGamePieceIndex= (function findTopPiece() { //wrapped in IIFE to break from nested loop
-      for (let j=0; j < gameArray[0].length; j++) {
-        for (let i=0; i < gameArray.length; i++) { 
-          if (gameArray[i][j] > 0) return 6-j;
-        }
-      }
-    })();
-    // console.log(topGamePieceIndex)
-    if (topGamePieceIndex) console.log('GPI')
-    let offsetY = 0;
-
-    if (topGamePieceIndex >=0) {
-      return new Promise(function(resolve,reject) {
-        function animate() {
-          drawGamePieces(gameArray, offsetY);
-          if (offsetY < topGamePieceIndex) {
-            offsetY += 0.25;
-            window.requestAnimationFrame(animate);
-          }
-          else {
-            resolve();
-          }
-        }
-        animate();
-      })
-    }
-
-    //offsetY is the number of cells that the animate function needs to offset by - +ve will push it down
-    // if TGPI is undefined it doesnt need to animate at all
-
-
-
-  }
-
-
+  
   function animateHoverPiece(e) {
     let col = getColumn(e);
     if (typeof prevCol == 'undefined') {
       let prevCol = -1;
     }
     let player = gameState.currentPlayer;
-    const fillStyles = {0: 'lightgrey', 1: 'red', 2: 'yellow'};
+    const pieces = {1: redPiece, 2: yellowPiece};
     let cell_width = gamePieceCanvas.width / COLS;
-    let hole_radius = cell_width * CELL_RADIUS;
-    let posX = cell_width / 2 + col * cell_width
-    let posY = cell_width /2;
+    let pieceSize = cell_width * CELL_RADIUS *2;
+    let posX = (cell_width - pieceSize)/2 + col * cell_width
+    let posY = (cell_width - pieceSize)/2;
 
     if (!gameState.animating) {
-      drawGamePieces(gameArray);
       ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height);
-      drawGamePieces(gameArray);
-      ctxGame.beginPath()
-      ctxGame.fillStyle = fillStyles[player];
-      ctxGame.moveTo(posX, posY);
-      ctxGame.arc(posX, posY, hole_radius, 0, 2 * Math.PI);
-      ctxGame.closePath();
-      ctxGame.fill();
+      ctxGame.drawImage(pieces[player], posX, posY, pieceSize , pieceSize);
     }
   }
 
   function removeHoverPiece() {
     ctxGame.clearRect(0,0, gamePieceCanvas.width, gamePieceCanvas.height);
-    drawGamePieces(gameArray);
+    // drawGamePieces(gameArray);
   }
   
   function handleGameMove(e) {
-    if (gameState.validMoves && !gameState.winningPlayer && !gameState.animatingDrop) {
+    if (gameState.validMoves && !gameState.winningPlayer && !gameState.animatingDrop && !gameState.AIMoving) {
       let col = getColumn(e);
       if (gameArray[col].lastIndexOf(0)>= 0 && !gameState.multiPlayer) { //if free spot
         makeMove(gameArray, col, PLAYER1, true)
+        .then(() => drawGamePieces(gameArray))
         .then(() => checkWin(gameArray, PLAYER1, col, WINNING_NUMBER))
         .then(() => AImove(gameArray, WINNING_NUMBER))
       }
       else if (gameArray[col].lastIndexOf(0)>= 0 && gameState.multiPlayer) {
         makeMove(gameArray, col, gameState.currentPlayer, true)
+        .then(() => drawGamePieces(gameArray))
         .then(() => checkWin(gameArray, gameState.currentPlayer,col, WINNING_NUMBER))
         .then(() => gameState.currentPlayer = (gameState.currentPlayer === PLAYER1 ? PLAYER2 : PLAYER1)) //switch current player
         draw();
@@ -320,14 +280,14 @@ const connect4 = (() => {
   }
 
 
-  async function resetGrid(e) {
+  function resetGrid(e) {
     //Impure fn- effects array, which is not passed
     //reset the game array to be empty (all 0s)
-    // gameState = {...gameState, winningPlayer: null, winningPos: []}
     e.preventDefault();
+    gameState = {...gameState, winningPlayer: null, winningPos: []}
     Object.assign(gameState, {winningPlayer: null, winningPos: [], validMoves: true});
     draw();
-    await animateReset(gameArray);
+    
     gameState.multiPlayer = document.querySelector('input[name="game-type"]:checked').value == 2;
     gameState.AIDepth = parseInt(document.querySelector('input[name="difficulty-select"]:checked').value);
     
@@ -437,21 +397,26 @@ const connect4 = (() => {
     return Math.floor(x/(gamePieceCanvas.width/COLS));
   }
 
-  function AImove(gameArray, winningScore) {
+  async function AImove(gameArray, winningScore) {
     let moves = getMoves(gameArray);
     if (typeof moves == 'undefined') {
     }
     if (moves.length === 1) {
+      gameState.AIMoving = true;
       makeMove(gameArray, moves[0], PLAYER2, true)
+      .then(() => drawGamePieces(gameArray))
       .then(() => checkWin(gameArray, PLAYER2, moves[0], winningScore));
     }
     else if (moves.length > 1) {
+      gameState.AIMoving = true;
       let [score, move] = minmax(gameArray, gameState.AIDepth, true, -1000000000, 1000000000);
       if (move >=0) {
-        makeMove(gameArray, move, PLAYER2, true )
+        await makeMove(gameArray, move, PLAYER2, true )
+        .then(() => drawGamePieces(gameArray))
         .then(() => checkWin(gameArray, PLAYER2, move, winningScore));
       }
     }
+      gameState.AIMoving =false;
   }
 
   function minmax(gameArray, depth, maxPlayer, alpha, beta) {
@@ -633,7 +598,7 @@ const connect4 = (() => {
 })();
 
 window.addEventListener('resize', connect4.resize);
-window.addEventListener('load', connect4.resize);
+window.onresize = connect4.resize;
 document.getElementById('frame-canvas').addEventListener('mousemove', connect4.animateHoverPiece)
 document.getElementById('frame-canvas').addEventListener('click', connect4.handleGameMove);
 document.getElementById('frame-canvas').addEventListener('mouseleave', connect4.removeHoverPiece);

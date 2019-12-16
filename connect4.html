@@ -1,59 +1,37 @@
 <!DOCTYPE html>
-<html>
 
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Connect 4 Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Roboto|Sulphur+Point&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" media="screen" href="connect4.css">
 
 </head>
 
 <body>
   <header>
-    <h1>Connect 4</h1>
-
+    <h1 id='header-title'>ConnectFour</h1>
   </header>
+
   <div id='game-wrapper'>
     <fieldset>
       <form>
-        <div id='game-type-select' class='select-set'>
-          <label>
-            <input type='radio' id='AI-game' name='game-type' value=1 checked>
-            Single Player (vs AI)
-          </label>
-
-          <label>
-            <input type='radio' id='2-player-game' name='game-type' value=2>
-            Two Player
-          </label>
-        </div>
-
-        <div id='difficulty-select' class='select-set'>
-          <label>
-            <input type='radio' id='difficuly-easy' name='difficulty-select' value=1 checked>
-            Easy
-          </label>
-
-          <label>
-            <input type='radio' id='difficulty-med' name='difficulty-select' value=4>
-            Medium
-          </label>
-
-          <label>
-            <input type='radio' id='difficulty-hard' name='difficulty-select' value=6>
-            Hard
-          </label>
-        </div>
+        <select name='game-type-select' id='game-type-select' class='select-set'>
+          <option value='AI-game'>Single Player (vs AI)</option>
+          <option value='2-player-game'>2 Player</option>
+        </select>
+        <select name='difficulty-select' id='difficulty-select' class='select-set'>
+          <option value=1>Easy</option>
+          <option value=4>Medium</option>
+          <option value=8>Hard</option>
+        </select>
 
         <button id='reset'>Reset</button>
       </form>
-
-      <img src='./redpiece.svg'>
-
-
     </fieldset>
+
     <div id='canvas-wrapper'></div>
   </div>
 
