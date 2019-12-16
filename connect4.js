@@ -68,15 +68,15 @@ const connect4 = (() => {
     //check available height and width of window
     let canvasRect = gamePieceCanvas.getBoundingClientRect();
     let canvasWrapperRect = canvasWrapper.getBoundingClientRect();
-    let canvasWrapperMargin = parseInt(window.getComputedStyle(canvasWrapper).getPropertyValue('margin-bottom'));
+    let canvasWrapperMargin = parseInt(window.getComputedStyle(canvasWrapper).getPropertyValue('margin-left'));
         
     let topY = canvasWrapperRect.top;  
-    let x = window.innerWidth;
-    let y = window.innerHeight - topY - canvasWrapperMargin;
+    let x = document.body.clientWidth - canvasWrapperMargin * 2;
+    let y = window.innerHeight - topY - canvasWrapperMargin * 2;
 
     if (x>y) {
       backgroundCanvas.width = gamePieceCanvas.width = frameCanvas.width = y
-      canvasWrapper.style.height =backgroundCanvas.height = gamePieceCanvas.height = frameCanvas.height = y
+      canvasWrapper.style.height = backgroundCanvas.height = gamePieceCanvas.height = frameCanvas.height = y
       canvasWrapper.style.height = y +'px'
       canvasWrapper.style.width = y +'px'
     }
@@ -88,9 +88,17 @@ const connect4 = (() => {
     }
 
     let gameWrapStyle = window.getComputedStyle(document.getElementById('game-wrapper'));
+
+    let formStyle = window.getComputedStyle(document.querySelector('form'));
+    let formWidth = parseInt(formStyle.getPropertyValue('width'));
     let gameWrapperWidth = parseInt(gameWrapStyle.getPropertyValue('width'));
+    let gameWrapperHeight = parseInt(gameWrapStyle.getPropertyValue('height'));
+    let gameCanvasWidth = canvasWrapperRect.width;
+    let gameCanvasHeight = canvasWrapperRect.height;
     const headerTitle = document.getElementById('header-title');
-    headerTitle.style.maxWidth = gameWrapperWidth + 'px';
+
+
+    headerTitle.style.maxWidth = formWidth < gameCanvasWidth * 0.5  ? gameWrapperWidth + 'px' : gameCanvasWidth + 'px';
     
   draw();
   }
