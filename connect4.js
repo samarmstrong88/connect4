@@ -6,9 +6,8 @@ const connect4 = (() => {
   const ROWS = 6;
   const EMPTY_PIECE = 0;
   const PLAYER1 = 1;
-  const PLAYER2 = 2; //AI PIECE
+  const PLAYER2 = 2; //AI PIECE or 2nd player
   const CELL_RADIUS = 0.4; //radius as percentage of total cell i.e. 80%
-  const PADDING = 10; //padding is 10px inside canvas
   const WINNING_NUMBER = 4
   let gameState = {
     validMoves: true,
@@ -222,7 +221,6 @@ const connect4 = (() => {
    })
   }
 
-  
   function animateHoverPiece(e) {
     let col = getColumn(e);
     if (typeof prevCol == 'undefined') {
@@ -287,7 +285,6 @@ const connect4 = (() => {
     })
   }
 
-
   function resetGrid(e) {
     //Impure fn- effects array, which is not passed
     //reset the game array to be empty (all 0s)
@@ -296,11 +293,7 @@ const connect4 = (() => {
     Object.assign(gameState, {winningPlayer: null, winningPos: [], validMoves: true});
     draw();
     
-    const playerSelect = document.querySelector('select[name="game-type-select"]');
-    const diffSelect = document.querySelector('select[name="difficulty-select"]');
-
-    gameState.multiPlayer =playerSelect.options[playerSelect.selectedIndex].value == 2;
-    gameState.AIDepth = diffSelect.options[diffSelect.selectedIndex].value;
+    updateGameSettings();
     
     gameArray = new Array(COLS)
     for (let i = 0; i < COLS; i++) {
@@ -310,6 +303,28 @@ const connect4 = (() => {
     draw();
   }
 
+  function updateEmptyGame() {
+    if (!gameStarted()) {
+      updateGameSettings();
+      console.log('updated')
+    }
+  }
+  document.querySelector('form').addEventListener('change', updateEmptyGame);
+
+  function updateGameSettings() {
+      const playerSelect = document.querySelector('select[name="game-type-select"]');
+      const diffSelect = document.querySelector('select[name="difficulty-select"]');
+      
+      gameState.multiPlayer =playerSelect.options[playerSelect.selectedIndex].value == '2';
+      gameState.AIDepth = diffSelect.options[diffSelect.selectedIndex].value;
+  }
+
+  function gameStarted() {
+    for (let i=0; i< gameArray.length; i++) {
+        if (gameArray[i][5] > 0) return true;
+    }
+    return false
+  }
 
   function checkWin(gameArray, player, col, winningScore) {
     //Pure Fn
@@ -594,6 +609,10 @@ const connect4 = (() => {
     }
     return score;
   }
+
+  function getGameState() {
+    return gameState;
+  }
   
   return {
     resize,
@@ -602,6 +621,7 @@ const connect4 = (() => {
     getScore,
     gameArray,
     gameState,
+    getGameState,
     animateDrop,
     animateHoverPiece,
     removeHoverPiece,
